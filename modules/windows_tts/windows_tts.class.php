@@ -144,7 +144,7 @@ function usual(&$out) {
  $this->admin($out);
 }
 
- function processSubscription($event, $details='') {
+ function processSubscription($event, &$details) {
   $this->getConfig();
   if ($event=='SAY' && !$this->config['DISABLED'] && (!$details['ignoreVoice'])) {
     $level=$details['level'];
@@ -152,6 +152,7 @@ function usual(&$out) {
     if ($level >= (int)getGlobal('minMsgLevel') && IsWindowsOS())
     {
        safe_exec('cscript ' . DOC_ROOT . '/rc/sapi.js ' . $message, 1, $level);
+       $details['ignoreVoice']=1;
     }
   }
  }
