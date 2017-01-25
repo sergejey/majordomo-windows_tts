@@ -117,6 +117,7 @@ function admin(&$out) {
    global $disabled;
    $this->config['DISABLED']=$disabled;
    $this->saveConfig();
+   subscribeToEvent($this->name, 'SAY');
    $this->redirect("?ok=1");
  }
 
