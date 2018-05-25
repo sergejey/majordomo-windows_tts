@@ -201,147 +201,49 @@ var MD5 = function(string) {
 }
 
 if (WScript.Arguments.length == 0) {
-   WScript.Arguments.ShowUsage();
+   //WScript.Arguments.ShowUsage();
    WScript.Quit();
 }
 
-//
-// Command line argument parsing
-//
-var lang = WScript.Arguments.Named("lang") || 419;    // Russian
-//var engine = WScript.Arguments.Named("engine") || "ScanSoft Katerina_Full_22kHz";
-var engine = WScript.Arguments.Named("engine") || "Alyona (Russian) SAPI5";
-
 var text = new Array();
 
-if (WScript.Arguments.Named.Exists("time"))
-   text.push(Time2String(new Date()));
+for (var i=0; i<WScript.Arguments.Unnamed.Count; i++)
+    text.push(WScript.Arguments.Unnamed(i));
 
-if (WScript.Arguments.Named.Exists("file"))
-   text.push(WScript.CreateObject("Scripting.FileSystemObject").OpenTextFile(WScript.Arguments.Named("file"), 1).ReadAll());
+ var fso = new ActiveXObject("Scripting.FileSystemObject"); 
+ var scriptPath = fso.GetFile(WScript.ScriptFullName).ParentFolder;
 
-if (WScript.Arguments.Named.Exists("clipboard"))
-   text.push(WScript.CreateObject("htmlfile").parentWindow.clipboardData.getData("text"));
+fnMD5 = MD5(text.join(' '));
 
-for (var i = 0; i < WScript.Arguments.Unnamed.Count; i++)
-   text.push(WScript.Arguments.Unnamed(i));
+ strWavFileName = scriptPath+'/../cms/cached/voice/sapi_'+fnMD5+'.wav';
+ strMp3FileName = scriptPath+'/../cms/cached/voice/sapi_'+fnMD5+'.mp3';
+ //WScript.Echo(strWavFileName);
+ var wShell = WScript.CreateObject("Wscript.Shell");
 
-var fso = new ActiveXObject("Scripting.FileSystemObject");
+   if (!fso.FileExists(strMp3FileName)) {//no cached file
 
-var scriptPath = fso.GetFile(WScript.ScriptFullName).ParentFolder;
+    var sv = WScript.CreateObject("SAPI.SpVoice");
+    var oFilestream = WScript.CreateObject("SAPI.SpFileStream");
+                  
+    sv.WaitUntilDone(-1);    // Don't be loud
+ 
+    WScript.Echo("speak to file");
 
-strWavFileName = scriptPath + '/../cms/cached/voice/sapi_' + MD5(text.join(' ')) + '.wav';
-strMp3FileName = scriptPath + '/../cms/cached/voice/sapi_' + MD5(text.join(' ')) + '.mp3';
+    //save to wav
+    oFilestream.Open(strWavFileName, 3, false);
+    sv.AudioOutputStream = oFilestream;
+    sv.speak(text.join(' '),0);
+    oFilestream.close();
 
-/* 
-   var sv = WScript.CreateObject("SAPI.SpVoice");
-   sv.WaitUntilDone(-1);    // Don't be loud
-   sv.Voice = (new Enumerator(sv.GetVoices("Language=" + lang,"Name=" + engine))).item();
-   
-   if (sv.Voice != null) {
-      //speak
-      sv.speak(text.join(' '),0);
-      sv.WaitUntilDone(-1);
-   }
-*/
-
-if (!fso.FileExists(strMp3FileName)) {
-   var sv = WScript.CreateObject("SAPI.SpVoice");
-   var oFilestream = WScript.CreateObject("SAPI.SpFileStream");
-
-   sv.WaitUntilDone(-1);    // Don't be loud
-   sv.Voice = (new Enumerator(sv.GetVoices("Language=" + lang, "Name=" + engine))).item();
-
-   if (sv.Voice != null) {
-      //speak
-      sv.speak(text.join(' '), 0);
-      sv.WaitUntilDone(-1);
-
-      //save to wav
-      oFilestream.Open(strWavFileName, 3, false);
-      sv.AudioOutputStream = oFilestream;
-      sv.speak(text.join(' '), 0);
-      sv.WaitUntilDone(-1);
-      oFilestream.close();
-
-      //convert wav to mp3
-      var wShell = WScript.CreateObject("Wscript.Shell");
-      var strCommand = scriptPath + "/lame.exe -V0 " + strWavFileName + " " + strMp3FileName;
-      wShell.run(strCommand, 0, false);
-   }
-} else {
-   var wShell = WScript.CreateObject("Wscript.Shell");
-   var strCommand = scriptPath + "/madplay.exe \"" + strMp3FileName + "\"";
-   wShell.run(strCommand, 0, true);
-
-   /*
-    strCommand = "@del \"" + strWavFileName + "\"";
-    wShell.run(strCommand, 0, false);
-   */
-
-   strCommand = "@copy /B \"" + strMp3FileName + "\" + ,, \"" + strMp3FileName + "\"";
-   wShell.run(strCommand, 0, false);
-}
-
-//
-// Finish
-//
-
-/** 
- * Convert Date to the russian time string.
- * @param {Date} Date object
- */
-function Time2String(date) {
-   function dig2str(dig, is_female) {
-      if (dig % 10 && dig > 20) {
-         return dig2str(10 * Math.floor(dig / 10)) + ' ' + dig2str(dig % 10, is_female); //
-      }
-
-      switch (dig) {
-         case 0: return ("ноль");
-         case 1: return (is_female ? "одна" : "один");
-         case 2: return (is_female ? "две" : "два");
-         case 3: return ("три");
-         case 4: return ("четыре");
-         case 5: return ("пять");
-         case 6: return ("шесть");
-         case 7: return ("семь");
-         case 8: return ("восемь");
-         case 9: return ("девять");
-         case 10: return ("десять");
-         case 11: return ("одинадцать");
-         case 12: return ("двенадцать");
-         case 13: return ("тринадцать");
-         case 14: return ("четырнадцать");
-         case 15: return ("пятнадцать");
-         case 16: return ("шестнадцать");
-         case 17: return ("семнадцать");
-         case 18: return ("восемнадцать");
-         case 19: return ("девятнадцать");
-         case 20: return ("двадцать");
-         case 30: return ("тридцать");
-         case 40: return ("сорок");
-         case 50: return ("пятьдесят");
-         case 60: return ("шестьдесят");
-         default: return ("не знаю");
-      }
-   }
-
-   var hour = date.getHours();
-   var mins = date.getMinutes();
-   var arr = new Array(dig2str(hour));
-
-   if (hour > 20) hour %= 10;
-      arr.push((hour == 1) ? "час" : (hour == 0 || hour > 4) ? "часов" : "часа");
-
-   if (!mins) {
-      arr.push('ровно');
-   } else {
-      arr.push(dig2str(mins, true));
-      
-      if (mins > 20) mins %= 10;
-         arr.push((mins == 1) ? "минута" : (mins == 0 || mins > 4) ? "минут" : "минуты");
-   }
-
-   return arr.join(' ');
-}
+    //convert wav to mp3
+    var strCommand = scriptPath+"/lame.exe -V0 "+strWavFileName+" "+strMp3FileName;
+    wShell.run(strCommand, 0, true); //WaitUntilDone
+    //delete wav
+    if(fso.FileExists(strWavFileName)){
+     fso.DeleteFile(strWavFileName,true);
+    }
+   } 
+    //play mp3 
+    WScript.Echo("play file");
+    var strCommand = scriptPath+"/madplay.exe \"" + strMp3FileName+"\"";
+    wShell.run(strCommand, 0, true); //WaitUntilDone
