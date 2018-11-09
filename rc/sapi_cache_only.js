@@ -29,6 +29,3 @@ if (!fso.FileExists(strMp3FileName)) {//no cached file
         fso.DeleteFile(strWavFileName,true);
     }
 }
-//play mp3
-var strCommand = scriptPath+"/madplay.exe \"" + strMp3FileName+"\"";
-wShell.run(strCommand, 0, true);

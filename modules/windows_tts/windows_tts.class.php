@@ -160,19 +160,49 @@ class windows_tts extends module {
     * @param mixed $event Event
     * @param mixed $details Event detail
     */
-   function processSubscription($event, &$details)
-   {
+   function processSubscription($event, &$details) {
       $this->getConfig();
 
-      if ($event == 'SAY' && !$this->config['DISABLED'] && (!$details['ignoreVoice']))
-      {
-         $level = $details['level'];
-         $message = $details['message'];
+      //DebMes('processing '.$event.': '.json_encode($details),'windows_tts');
 
-         if ($level >= (int)getGlobal('minMsgLevel') && IsWindowsOS())
-         {
-            safe_exec('cscript ' . DOC_ROOT . '/rc/sapi.js ' . $message, 1, $level);
+      $level = (int)$details['level'];
+      $message = $details['message'];
+      $destination = $details['destination'];
+
+      $mmd5 = md5($message);
+      $cached_filename = ROOT.'cms/cached/voice/sapi_'.$mmd5.'.mp3';
+      
+      $on_complete="if (file_exists('$cached_filename')) {
+                            processSubscriptionsSafe('SAY_CACHED_READY', array(
+                                'level' => $level,
+                                'tts_engine' => 'windows_tts',
+                                'filename' => '$cached_filename',
+                                'destination' => '$destination',
+                                'event' => '$event',
+                            ));
+                        }";
+
+      if ($event == 'SAY' && !$this->config['DISABLED'] && (!$details['ignoreVoice'])) {
+         if ($level >= (int)getGlobal('minMsgLevel') && IsWindowsOS()) {
+            //safe_exec('cscript ' . DOC_ROOT . '/rc/sapi.js ' . $message, 1, $level);
+            if (file_exists($cached_filename)) {
+               //DebMes('playing '.$cached_filename,'windows_tts');
+               playSound($cached_filename);
+               eval ($on_complete);
+            } else {
+               $cmd = 'cscript ' . DOC_ROOT . '/rc/sapi.js /md5:' .$mmd5.' ' . $message;
+               //DebMes("Running: ".$cmd,'windows_tts');
+               safe_exec($cmd, 1, $level,$on_complete);
+            }
             $details['ignoreVoice'] = 1;
+         }
+      } elseif ($event == 'SAYTO' || $event == 'ASK') {
+         if (file_exists($cached_filename)) {
+            eval ($on_complete);
+         } else {
+            $cmd = 'cscript ' . DOC_ROOT . '/rc/sapi_cache_only.js /md5:' .$mmd5.' ' . $message;
+            //DebMes("Running: ".$cmd,'windows_tts');
+            safe_exec($cmd, 1, $level,$on_complete);
          }
       }
    }
@@ -185,6 +215,8 @@ class windows_tts extends module {
    function install($data = '')
    {
       subscribeToEvent($this->name, 'SAY');
+      subscribeToEvent($this->name, 'SAYTO');
+      subscribeToEvent($this->name, 'ASK');
       parent::install();
    }
 }
