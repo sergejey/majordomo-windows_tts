@@ -173,7 +173,7 @@ class windows_tts extends module {
       $cached_filename = ROOT.'cms/cached/voice/sapi_'.$mmd5.'.mp3';
       
       $on_complete="if (file_exists('$cached_filename')) {
-                            processSubscriptionsSafe('SAY_CACHED_READY', array(
+                            processSubscriptions('SAY_CACHED_READY', array(
                                 'level' => $level,
                                 'tts_engine' => 'windows_tts',
                                 'filename' => '$cached_filename',
