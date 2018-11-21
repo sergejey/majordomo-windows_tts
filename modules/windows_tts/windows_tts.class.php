@@ -173,12 +173,13 @@ class windows_tts extends module {
       $cached_filename = ROOT.'cms/cached/voice/sapi_'.$mmd5.'.mp3';
       
       $on_complete="if (file_exists('$cached_filename')) {
-                            processSubscriptions('SAY_CACHED_READY', array(
+                            processSubscriptionsSafe('SAY_CACHED_READY', array(
                                 'level' => $level,
                                 'tts_engine' => 'windows_tts',
                                 'filename' => '$cached_filename',
                                 'destination' => '$destination',
                                 'event' => '$event',
+                                'message' => '$message',
                             ));
                         }";
 
@@ -187,8 +188,8 @@ class windows_tts extends module {
             //safe_exec('cscript ' . DOC_ROOT . '/rc/sapi.js ' . $message, 1, $level);
             if (file_exists($cached_filename)) {
                //DebMes('playing '.$cached_filename,'windows_tts');
-               playSound($cached_filename);
                eval ($on_complete);
+               playSound($cached_filename);
             } else {
                $cmd = 'cscript ' . DOC_ROOT . '/rc/sapi.js /md5:' .$mmd5.' ' . $message;
                //DebMes("Running: ".$cmd,'windows_tts');
