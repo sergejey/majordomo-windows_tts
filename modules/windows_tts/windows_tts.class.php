@@ -220,8 +220,6 @@ class windows_tts extends module {
       subscribeToEvent($this->name, 'ASK');
       parent::install();
    }
-}
-
     /**
      * Uninstall
      *
