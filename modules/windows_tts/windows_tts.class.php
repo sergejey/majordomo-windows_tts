@@ -234,6 +234,7 @@ class windows_tts extends module {
         unsubscribeFromEvent($this->name, 'ASK');
         parent::uninstall();
     }
+}
 /*
 *
 * TW9kdWxlIGNyZWF0ZWQgTWFyIDEzLCAyMDE2IHVzaW5nIFNlcmdlIEouIHdpemFyZCAoQWN0aXZlVW5pdCBJbmMgd3d3LmFjdGl2ZXVuaXQuY29tKQ==
