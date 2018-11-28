@@ -189,7 +189,7 @@ class windows_tts extends module {
             if (file_exists($cached_filename)) {
                //DebMes('playing '.$cached_filename,'windows_tts');
                eval ($on_complete);
-               playSound($cached_filename);
+               playSound($cached_filename, 1, $level);
             } else {
                $cmd = 'cscript ' . DOC_ROOT . '/rc/sapi.js /md5:' .$mmd5.' ' . $message;
                //DebMes("Running: ".$cmd,'windows_tts');
