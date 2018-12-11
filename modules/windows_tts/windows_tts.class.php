@@ -215,9 +215,9 @@ class windows_tts extends module {
    */
    function install($data = '')
    {
-      subscribeToEvent($this->name, 'SAY');
-      subscribeToEvent($this->name, 'SAYTO');
-      subscribeToEvent($this->name, 'ASK');
+      subscribeToEvent($this->name, 'SAY', '', 100);
+      subscribeToEvent($this->name, 'SAYTO', '', 100);
+      subscribeToEvent($this->name, 'ASK', '', 100);
       parent::install();
    }
     /**
